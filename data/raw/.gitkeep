@@ -1,0 +1,4 @@
+# .gitkeep
+# This file ensures that the data/raw/ directory is tracked by Git
+# even when it's empty. You can safely delete this file once
+# the directory contains other files.

@@ -1,0 +1,38 @@
+# Healthcare Analytics Configuration
+project:
+  name: "healthcare-length-of-stay"
+  version: "1.0.0"
+  description: "Machine learning models to predict hospital length of stay"
+
+# Data configuration
+data:
+  raw_data_path: "data/raw"
+  processed_data_path: "data/processed"
+  interim_data_path: "data/interim"
+  train_file: "train.csv"
+  test_file: "test.csv"
+  target_column: "Stay"
+
+# Model configuration
+models:
+  random_state: 42
+  test_size: 0.2
+  cv_folds: 5
+  
+# Paths
+paths:
+  models: "models"
+  results: "results"
+  experiments: "experiments"
+  logs: "logs"
+
+# MLflow
+mlflow:
+  experiment_name: "healthcare_los_prediction"
+  tracking_uri: "experiments/mlruns"
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/app.log" 

@@ -1,0 +1,11 @@
+# Minimal dependencies for the live Gradio demo (app.py).
+# Use THIS file for Hugging Face Spaces — the full requirements.txt pulls in
+# TensorFlow / MLflow / JupyterLab which the demo does not need.
+gradio>=5
+lightgbm>=4
+shap>=0.46
+scikit-learn>=1.4
+pandas>=2
+numpy>=1.26
+joblib>=1.3
+matplotlib>=3.7

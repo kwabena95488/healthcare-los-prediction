@@ -1,0 +1,9 @@
+{
+  "model": "LightGBM (demo, self-contained)",
+  "n_train": 254750,
+  "n_test": 63688,
+  "accuracy": 0.4277100866725286,
+  "f1_weighted": 0.3942171882770261,
+  "f1_macro": 0.2621702981543005,
+  "n_classes": 11
+}
