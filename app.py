@@ -28,7 +28,17 @@ warnings.filterwarnings("ignore")
 ROOT = Path(__file__).resolve().parent
 MODEL = joblib.load(ROOT / "models" / "demo" / "lightgbm_demo.pkl")
 PRE = joblib.load(ROOT / "models" / "demo" / "preprocessor.pkl")
-EXPLAINER = shap.TreeExplainer(MODEL)
+
+# Built lazily on first prediction — keeps startup fast and avoids heavy work
+# during the Space's health check.
+_EXPLAINER = None
+
+
+def _get_explainer():
+    global _EXPLAINER
+    if _EXPLAINER is None:
+        _EXPLAINER = shap.TreeExplainer(MODEL)
+    return _EXPLAINER
 
 STAY_CLASSES = ["0-10", "11-20", "21-30", "31-40", "41-50", "51-60",
                 "61-70", "71-80", "81-90", "91-100", "More than 100 Days"]
@@ -63,6 +73,15 @@ def predict(hospital_code, hospital_type, city_hospital, region, extra_rooms,
         "Type of Admission": admission_type, "Severity of Illness": severity,
         "Visitors with Patient": visitors, "Age": age, "Admission_Deposit": deposit,
     }
+    try:
+        return _predict_impl(raw)
+    except Exception as e:  # surface the error in the UI instead of a silent 503
+        import traceback
+        traceback.print_exc()
+        return f"Error: {e}", {}, None
+
+
+def _predict_impl(raw):
     X = _featurize(raw)
     proba = MODEL.predict_proba(X)[0]
     pred_idx = int(np.argmax(proba))
@@ -70,7 +89,7 @@ def predict(hospital_code, hospital_type, city_hospital, region, extra_rooms,
     probs = {STAY_CLASSES[i]: float(proba[i]) for i in range(len(STAY_CLASSES))}
 
     # SHAP explanation for the predicted class
-    sv = EXPLAINER.shap_values(X)
+    sv = _get_explainer().shap_values(X)
     # shap_values: list (per class) of (1, n_features) OR (1, n_features, n_classes)
     if isinstance(sv, list):
         contrib = np.asarray(sv[pred_idx])[0]
@@ -123,4 +142,6 @@ with gr.Blocks(title="Hospital Length-of-Stay Predictor") as demo:
     btn.click(predict, inputs=inputs, outputs=[out_label, out_probs, out_plot])
 
 if __name__ == "__main__":
-    demo.launch()
+    # ssr_mode=False: Gradio 6's server-side rendering is enabled by default on
+    # HF Spaces (Node present) and can break the queue SSE stream; disable it.
+    demo.queue().launch(ssr_mode=False)
